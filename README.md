@@ -1,6 +1,6 @@
-# Baby Tracker
+# Trackster
 
-A FastAPI-based web application for tracking baby-related activities.
+A general life tracking application that syncs tasks from voice input via Gemini AI. Built with FastAPI for the backend APIs and functionality, with Streamlit for the UI.
 
 ## Setup
 
@@ -23,6 +23,13 @@ uvicorn main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
+
+## Features
+
+- Voice-to-task syncing via Gemini AI
+- FastAPI backend for robust API functionality
+- Streamlit-based UI for quick prototyping
+- Life tracking capabilities (tasks, habits, activities, etc.)
 
 ## API Endpoints
 
