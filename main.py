@@ -1,9 +1,8 @@
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from datetime import datetime
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 class Message(BaseModel):
@@ -15,13 +14,18 @@ messages = []
 
 @app.get("/hello")
 def get_hello():
-    return {"message": "Hello, Arnold!"}
+    return {"message": "Hello, from trackster, Arnold!"}
 
 
 @app.post("/message")
 def post_message(msg: Message):
-    messages.append(msg.text)
-    return {"received": msg.text, "total_messages": len(messages)}
+    message_data = {"text": msg.text, "timestamp": datetime.now().isoformat()}
+    messages.append(message_data)
+    return {
+        "received": msg.text,
+        "timestamp": message_data["timestamp"],
+        "total_messages": len(messages),
+    }
 
 
 @app.get("/messages")
