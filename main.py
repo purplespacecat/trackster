@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from datetime import datetime
+from sqlalchemy.orm import Session
+from database import SessionLocal, MessageDB
 
 app = FastAPI()
 
@@ -9,7 +11,15 @@ class Message(BaseModel):
     text: str
 
 
-messages = []
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# messages = []
 
 
 @app.get("/hello")
@@ -18,16 +28,30 @@ def get_hello():
 
 
 @app.post("/message")
-def post_message(msg: Message):
-    message_data = {"text": msg.text, "timestamp": datetime.now().isoformat()}
-    messages.append(message_data)
+def post_message(msg: Message, db: Session = Depends(get_db)):
+    # message_data = {"text": msg.text, "timestamp": datetime.now().isoformat()}
+    # messages.append(message_data)
+    # Create new message in database
+    db_message = MessageDB(text=msg.text, timestamp=datetime.now())
+    db.add(db_message)
+    db.commit()
+    db.refresh(db_message)
+
+    # Get total count
+    total = db.query(MessageDB).count()
+
     return {
         "received": msg.text,
-        "timestamp": message_data["timestamp"],
-        "total_messages": len(messages),
+        "timestamp": db_message.timestamp.isoformat(),
+        "total_messages": total,
     }
 
 
 @app.get("/messages")
-def get_messages():
+def get_messages(db: Session = Depends(get_db)):
+    db_messages = db.query(MessageDB).order_by(MessageDB.timestamp).all()
+    messages = [
+        {"text": msg.text, "timestamp": msg.timestamp.isoformat()}
+        for msg in db_messages
+    ]
     return {"messages": messages}
