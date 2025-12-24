@@ -100,3 +100,6 @@ with col2:
 # Footer with instructions
 st.divider()
 st.caption("💡 **How to use:** Make sure your FastAPI server is running with `uvicorn main:app --reload`")
+
+# Navigation hint
+st.info("📊 Check out the **Stats** page in the sidebar for analytics and experiments!")
