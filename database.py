@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -16,6 +16,16 @@ class NoteDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
+    timestamp = Column(DateTime, default=datetime.now)
+
+
+# Summary model - stores AI-generated summaries
+class SummaryDB(Base):
+    __tablename__ = "summaries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    summary_text = Column(Text, nullable=False)
+    note_count = Column(Integer, nullable=False)  # How many notes were summarized
     timestamp = Column(DateTime, default=datetime.now)
 
 
