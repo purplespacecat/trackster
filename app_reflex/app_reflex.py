@@ -8,59 +8,61 @@ API_URL = "http://localhost:8000"
 
 class State(rx.State):
     """The app state."""
-    messages: list[dict] = []
-    message_input: str = ""
+
+    notes: list[dict] = []
+    note_input: str = ""
     send_status: str = ""
     test_status: str = ""
     delete_status: str = ""
 
-    async def load_messages(self):
-        """Load messages from the API"""
+    async def load_notes(self):
+        """Load notes from the API"""
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{API_URL}/messages")
+                response = await client.get(f"{API_URL}/notes")
                 if response.status_code == 200:
                     data = response.json()
-                    self.messages = data.get("messages", [])
+                    self.notes = data.get("notes", [])
                 else:
-                    self.messages = []
+                    self.notes = []
         except Exception as e:
-            self.messages = []
+            self.notes = []
 
-    async def send_message(self):
-        """Send a message to the API"""
-        if not self.message_input:
-            self.send_status = "Please enter a message first!"
+    async def send_note(self):
+        """Send a note to the API"""
+        if not self.note_input:
+            self.send_status = "Please enter a note first!"
             return
 
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"{API_URL}/message",
-                    json={"text": self.message_input}
+                    f"{API_URL}/note", json={"text": self.note_input}
                 )
                 if response.status_code == 200:
                     data = response.json()
-                    self.send_status = f"Message sent! Total: {data['total_messages']}"
-                    self.message_input = ""
-                    await self.load_messages()
+                    self.send_status = f"Note saved! Total: {data['total_notes']}"
+                    self.note_input = ""
+                    await self.load_notes()
                 else:
                     self.send_status = f"Error: {response.status_code}"
         except Exception as e:
-            self.send_status = "Cannot connect to API. Make sure FastAPI server is running!"
+            self.send_status = (
+                "Cannot connect to API. Make sure FastAPI server is running!"
+            )
 
-    async def delete_message(self, message_id: int):
-        """Delete a message by ID"""
+    async def delete_note(self, note_id: int):
+        """Delete a note by ID"""
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.delete(f"{API_URL}/message/{message_id}")
+                response = await client.delete(f"{API_URL}/note/{note_id}")
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("success"):
-                        self.delete_status = "Message deleted successfully!"
+                        self.delete_status = "Note deleted successfully!"
                     else:
-                        self.delete_status = "Message not found"
-                    await self.load_messages()
+                        self.delete_status = "Note not found"
+                    await self.load_notes()
                 else:
                     self.delete_status = f"Error: {response.status_code}"
         except Exception as e:
@@ -80,18 +82,18 @@ class State(rx.State):
             self.test_status = "FastAPI server is not running!"
 
 
-def message_card(msg) -> rx.Component:
-    """Render a message card with delete button"""
+def note_card(note) -> rx.Component:
+    """Render a note card with delete button"""
     return rx.box(
         rx.hstack(
             rx.vstack(
                 rx.text(
-                    msg["text"],
+                    note["text"],
                     font_weight="bold",
                     margin_bottom="5px",
                 ),
                 rx.text(
-                    msg["timestamp"],
+                    note["timestamp"],
                     font_size="0.85em",
                     color="#666",
                 ),
@@ -101,7 +103,7 @@ def message_card(msg) -> rx.Component:
             ),
             rx.button(
                 "Delete",
-                on_click=State.delete_message(msg["id"]),
+                on_click=State.delete_note(note["id"]),
                 color_scheme="red",
                 size="2",
             ),
@@ -122,7 +124,7 @@ def index() -> rx.Component:
         rx.container(
             # Header with title and test button
             rx.hstack(
-                rx.heading("Trackster - Message Tracker", size="8"),
+                rx.heading("Trackster - A note tracking app", size="8"),
                 rx.button(
                     "Test API Connection",
                     on_click=State.test_connection,
@@ -137,20 +139,19 @@ def index() -> rx.Component:
                 rx.text(State.test_status, color="#666", margin_bottom="10px"),
             ),
             rx.divider(margin_y="20px"),
-
-            # Send message section
-            rx.heading("Send a Message", size="5", margin_bottom="10px"),
+            # Add note section
+            rx.heading("Add a Note", size="5", margin_bottom="10px"),
             rx.hstack(
                 rx.input(
-                    placeholder="Type your message here...",
-                    value=State.message_input,
-                    on_change=State.set_message_input,
+                    placeholder="Type your note here...",
+                    value=State.note_input,
+                    on_change=State.set_note_input,
                     width="100%",
                     size="3",
                 ),
                 rx.button(
-                    "Send Message",
-                    on_click=State.send_message,
+                    "Save Note",
+                    on_click=State.send_note,
                     size="3",
                     color_scheme="blue",
                 ),
@@ -163,12 +164,11 @@ def index() -> rx.Component:
                 rx.text(State.send_status, margin_bottom="10px"),
             ),
             rx.divider(margin_y="20px"),
-
-            # All messages section
-            rx.heading("All Messages", size="5", margin_bottom="10px"),
+            # All notes section
+            rx.heading("All Notes", size="5", margin_bottom="10px"),
             rx.button(
-                "🔄 Refresh Messages",
-                on_click=State.load_messages,
+                "🔄 Refresh Notes",
+                on_click=State.load_notes,
                 size="2",
                 margin_bottom="15px",
             ),
@@ -177,17 +177,17 @@ def index() -> rx.Component:
                 rx.text(State.delete_status, margin_bottom="10px"),
             ),
             rx.cond(
-                State.messages.length() > 0,
+                State.notes.length() > 0,
                 rx.vstack(
-                    rx.text(f"Total Messages: {State.messages.length()}", font_weight="bold"),
+                    rx.text(f"Total Notes: {State.notes.length()}", font_weight="bold"),
                     rx.foreach(
-                        State.messages.reverse(),
-                        message_card,
+                        State.notes.reverse(),
+                        note_card,
                     ),
                     spacing="2",
                     width="100%",
                 ),
-                rx.text("No messages yet. Send your first message!"),
+                rx.text("No notes yet. Add your first note!"),
             ),
             rx.divider(margin_y="20px"),
             rx.text(
@@ -197,7 +197,7 @@ def index() -> rx.Component:
             ),
             padding="40px",
             max_width="800px",
-            on_mount=State.load_messages,
+            on_mount=State.load_notes,
         ),
     )
 

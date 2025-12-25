@@ -1,6 +1,6 @@
 # Trackster
 
-A message tracking application built with FastAPI backend and Reflex UI. Track messages with timestamps, delete messages, and manage your data in a clean, Python-only stack.
+A personal note-taking journal application built with FastAPI backend and Reflex UI. Capture notes with timestamps, delete them easily, and manage your personal log in a clean, Python-only stack.
 
 ## Project Structure
 
@@ -46,23 +46,23 @@ The UI will open automatically in your browser at `http://localhost:3000`
 
 ## Features
 
-- **Message tracking** with automatic timestamps
-- **Delete messages** with dedicated delete buttons next to each message
+- **Note-taking** with automatic timestamps
+- **Delete notes** with dedicated delete buttons next to each note
 - **FastAPI backend** for robust REST API
 - **Reflex UI** for modern, reactive interface (pure Python, no HTML/CSS/JS needed!)
 - **Real-time updates** with refresh functionality
-- **SQLite database** for persistent message storage
+- **SQLite database** for persistent note storage
 - **Clean, centered, minimal layout**
 
 ## API Endpoints
 
 - `GET /hello` - Test endpoint returning a greeting
-- `POST /message` - Add a new message with timestamp
-  - Body: `{"text": "your message"}`
-  - Returns: `{"received": "...", "timestamp": "...", "total_messages": N}`
-- `GET /messages` - Retrieve all messages with timestamps and IDs
-  - Returns: `{"messages": [{"id": 1, "text": "...", "timestamp": "..."}, ...]}`
-- `DELETE /message/{message_id}` - Delete a message by ID
+- `POST /note` - Add a new note with timestamp
+  - Body: `{"text": "your note"}`
+  - Returns: `{"received": "...", "timestamp": "...", "total_notes": N}`
+- `GET /notes` - Retrieve all notes with timestamps and IDs
+  - Returns: `{"notes": [{"id": 1, "text": "...", "timestamp": "..."}, ...]}`
+- `DELETE /note/{note_id}` - Delete a note by ID
   - Returns: `{"success": true/false, "message": "..."}`
 
 ## API Documentation
