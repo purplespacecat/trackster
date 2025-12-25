@@ -1,19 +1,24 @@
 # AI Summary Feature Setup Guide
 
 ## Overview
-The AI summary feature uses Google's Gemini API to generate intelligent summaries of your last 6 notes, providing insights into themes, mood, and patterns.
+The AI summary feature uses Google's Gemini 2.5 API to generate intelligent summaries of your last 6 notes, providing insights into themes, mood, and patterns.
+
+**Current Model**: `gemini-2.5-flash-lite` (latest free tier model)
 
 ## Setup Steps
 
 ### 1. Get a Gemini API Key
 
-1. Go to **Google AI Studio**: https://makersuite.google.com/app/apikey
-2. Click **"Get API Key"** or **"Create API Key"**
+1. Go to **Google AI Studio**: https://aistudio.google.com/apikey
+2. Click **"Create API Key"**
 3. If prompted, create a new project or select an existing one
 4. Click **"Create API key in new project"** (or select existing project)
 5. Copy the API key (it will look like: `AIzaSyA...`)
 
-**Important**: Keep this key secret! Don't share it or commit it to git.
+**Important**:
+- Keep this key secret! Don't share it or commit it to git.
+- If you get quota errors, delete and recreate your API key
+- Make sure you're using the new API key URL (aistudio.google.com, not makersuite)
 
 ### 2. Add API Key to Environment
 
@@ -78,10 +83,17 @@ The `.env` file is loaded when the servers start, so you need to restart them:
 
 ## API Limits
 
-Google Gemini has a free tier with generous limits:
-- **Free tier**: 60 requests per minute
+Google Gemini 2.5 has a free tier with generous limits:
+- **Free tier**: 15 requests per minute (gemini-2.5-flash-lite)
+- **Daily limit**: 1,500 requests per day
 - More than enough for personal note-taking use
 - Check current limits at: https://ai.google.dev/pricing
+
+## Technical Details
+
+**Package**: `google-genai` v1.56.0 (the new actively maintained SDK)
+- **Old package** `google-generativeai` is **deprecated** and no longer supported
+- **Model**: `gemini-2.5-flash-lite` (replaces deprecated gemini-1.5-flash)
 
 ## Privacy Note
 
