@@ -1,14 +1,17 @@
 # Trackster
 
-A message tracking application built with FastAPI backend and Streamlit UI. Track messages with timestamps in a clean, Python-only stack.
+A message tracking application built with FastAPI backend and Reflex UI. Track messages with timestamps, delete messages, and manage your data in a clean, Python-only stack.
 
 ## Project Structure
 
 ```
 trackster/
-├── main.py          # FastAPI backend (REST API)
-├── app.py           # Streamlit UI (frontend)
-├── requirements.txt # Python dependencies
+├── main.py              # FastAPI backend (REST API)
+├── database.py          # SQLAlchemy database models
+├── app_reflex/          # Reflex UI (frontend)
+│   └── app_reflex.py    # Main Reflex application
+├── rxconfig.py          # Reflex configuration
+├── requirements.txt     # Python dependencies
 └── README.md
 ```
 
@@ -35,19 +38,21 @@ uvicorn main:app --reload
 ```
 The API will be available at `http://localhost:8000`
 
-### 2. Start the Streamlit UI (Terminal 2):
+### 2. Start the Reflex UI (Terminal 2):
 ```bash
-streamlit run app.py
+reflex run
 ```
-The UI will open automatically in your browser at `http://localhost:8501`
+The UI will open automatically in your browser at `http://localhost:3000`
 
 ## Features
 
 - **Message tracking** with automatic timestamps
+- **Delete messages** with dedicated delete buttons next to each message
 - **FastAPI backend** for robust REST API
-- **Streamlit UI** for easy interaction (no HTML/JS needed!)
+- **Reflex UI** for modern, reactive interface (pure Python, no HTML/CSS/JS needed!)
 - **Real-time updates** with refresh functionality
-- **In-memory storage** (messages reset on server restart)
+- **SQLite database** for persistent message storage
+- **Clean, centered, minimal layout**
 
 ## API Endpoints
 
@@ -55,8 +60,10 @@ The UI will open automatically in your browser at `http://localhost:8501`
 - `POST /message` - Add a new message with timestamp
   - Body: `{"text": "your message"}`
   - Returns: `{"received": "...", "timestamp": "...", "total_messages": N}`
-- `GET /messages` - Retrieve all messages with timestamps
-  - Returns: `{"messages": [{"text": "...", "timestamp": "..."}, ...]}`
+- `GET /messages` - Retrieve all messages with timestamps and IDs
+  - Returns: `{"messages": [{"id": 1, "text": "...", "timestamp": "..."}, ...]}`
+- `DELETE /message/{message_id}` - Delete a message by ID
+  - Returns: `{"success": true/false, "message": "..."}`
 
 ## API Documentation
 
@@ -66,7 +73,8 @@ Interactive API documentation is available at:
 
 ## Tech Stack
 
-- **Backend**: FastAPI + Pydantic
-- **Frontend**: Streamlit
+- **Backend**: FastAPI + Pydantic + SQLAlchemy
+- **Frontend**: Reflex (Python-based reactive web framework)
+- **Database**: SQLite
 - **Language**: Python 3.12+
 - **Dependencies**: See `requirements.txt`

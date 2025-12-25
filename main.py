@@ -51,7 +51,17 @@ def post_message(msg: Message, db: Session = Depends(get_db)):
 def get_messages(db: Session = Depends(get_db)):
     db_messages = db.query(MessageDB).order_by(MessageDB.timestamp).all()
     messages = [
-        {"text": msg.text, "timestamp": msg.timestamp.isoformat()}
+        {"id": msg.id, "text": msg.text, "timestamp": msg.timestamp.isoformat()}
         for msg in db_messages
     ]
     return {"messages": messages}
+
+
+@app.delete("/message/{message_id}")
+def delete_message(message_id: int, db: Session = Depends(get_db)):
+    db_message = db.query(MessageDB).filter(MessageDB.id == message_id).first()
+    if db_message:
+        db.delete(db_message)
+        db.commit()
+        return {"success": True, "message": "Message deleted"}
+    return {"success": False, "message": "Message not found"}
