@@ -53,31 +53,13 @@ Please provide a thoughtful summary that includes:
 Keep the summary concise but insightful."""
 
     try:
-        # Try multiple models in order of preference
-        models_to_try = [
-            'gemini-1.5-flash',      # Most stable free model
-            'gemini-1.5-flash-8b',   # Smaller, faster variant
-            'gemini-2.0-flash-exp',  # Experimental (may not be available)
-        ]
-
-        last_error = None
-        for model_name in models_to_try:
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=prompt
-                )
-                return response.text
-            except Exception as e:
-                last_error = e
-                continue
-
-        # If all failed
-        error_msg = str(last_error)
-        if "RESOURCE_EXHAUSTED" in error_msg or "quota" in error_msg.lower():
-            return "Error: Your API key quota is at 0. Please:\n1. Go to https://aistudio.google.com/apikey\n2. Delete your current API key\n3. Create a NEW API key\n4. Update your .env file with the new key\n5. Restart the server"
-        else:
-            return f"Error: {error_msg}"
+        # gemini-2.5-flash-lite
+        #  (most stable free model)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt
+        )
+        return response.text
 
     except Exception as e:
-        return f"Error generating summary: {str(e)}"
+        # Return the raw error from the API
+        return f"API Error: {str(e)}"
