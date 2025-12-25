@@ -2,7 +2,8 @@ from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from datetime import datetime
 from sqlalchemy.orm import Session
-from database import SessionLocal, NoteDB
+from database import SessionLocal, NoteDB, SummaryDB
+from ai_service import generate_notes_summary
 
 app = FastAPI()
 
@@ -60,3 +61,61 @@ def delete_note(note_id: int, db: Session = Depends(get_db)):
         db.commit()
         return {"success": True, "message": "Note deleted"}
     return {"success": False, "message": "Note not found"}
+
+
+@app.post("/notes/summary")
+def create_summary(count: int = 6, db: Session = Depends(get_db)):
+    """Generate an AI summary of the last N notes"""
+    # Get the last N notes
+    db_notes = db.query(NoteDB).order_by(NoteDB.timestamp.desc()).limit(count).all()
+
+    if not db_notes:
+        return {"success": False, "message": "No notes available to summarize"}
+
+    # Prepare notes for AI
+    notes_for_ai = [
+        {"text": note.text, "timestamp": note.timestamp.isoformat()}
+        for note in reversed(db_notes)  # Reverse to chronological order
+    ]
+
+    # Generate summary using AI
+    summary_text = generate_notes_summary(notes_for_ai, count)
+
+    # Save summary to database
+    db_summary = SummaryDB(
+        summary_text=summary_text,
+        note_count=len(db_notes),
+        timestamp=datetime.now()
+    )
+    db.add(db_summary)
+    db.commit()
+    db.refresh(db_summary)
+
+    return {
+        "success": True,
+        "summary": {
+            "id": db_summary.id,
+            "text": db_summary.summary_text,
+            "note_count": db_summary.note_count,
+            "timestamp": db_summary.timestamp.isoformat()
+        }
+    }
+
+
+@app.get("/notes/summary/latest")
+def get_latest_summary(db: Session = Depends(get_db)):
+    """Get the most recent summary from the database"""
+    db_summary = db.query(SummaryDB).order_by(SummaryDB.timestamp.desc()).first()
+
+    if not db_summary:
+        return {"success": False, "message": "No summaries generated yet"}
+
+    return {
+        "success": True,
+        "summary": {
+            "id": db_summary.id,
+            "text": db_summary.summary_text,
+            "note_count": db_summary.note_count,
+            "timestamp": db_summary.timestamp.isoformat()
+        }
+    }

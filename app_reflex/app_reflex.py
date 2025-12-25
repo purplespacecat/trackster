@@ -14,6 +14,10 @@ class State(rx.State):
     send_status: str = ""
     test_status: str = ""
     delete_status: str = ""
+    summary_text: str = ""
+    summary_timestamp: str = ""
+    summary_note_count: int = 0
+    summary_loading: bool = False
 
     async def load_notes(self):
         """Load notes from the API"""
@@ -27,6 +31,11 @@ class State(rx.State):
                     self.notes = []
         except Exception as e:
             self.notes = []
+
+    async def on_load(self):
+        """Load notes and latest summary on page load"""
+        await self.load_notes()
+        await self.load_latest_summary()
 
     async def send_note(self):
         """Send a note to the API"""
@@ -80,6 +89,47 @@ class State(rx.State):
                     self.test_status = f"Error: {response.status_code}"
         except Exception as e:
             self.test_status = "FastAPI server is not running!"
+
+    async def load_latest_summary(self):
+        """Load the most recent summary from the database"""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{API_URL}/notes/summary/latest")
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success"):
+                        summary = data.get("summary", {})
+                        self.summary_text = summary.get("text", "")
+                        self.summary_timestamp = summary.get("timestamp", "")
+                        self.summary_note_count = summary.get("note_count", 0)
+                    else:
+                        self.summary_text = ""
+                else:
+                    self.summary_text = ""
+        except Exception as e:
+            self.summary_text = ""
+
+    async def generate_summary(self, count: int = 6):
+        """Generate a new AI summary of the last N notes"""
+        self.summary_loading = True
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(f"{API_URL}/notes/summary?count={count}")
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success"):
+                        summary = data.get("summary", {})
+                        self.summary_text = summary.get("text", "")
+                        self.summary_timestamp = summary.get("timestamp", "")
+                        self.summary_note_count = summary.get("note_count", 0)
+                    else:
+                        self.summary_text = f"Error: {data.get('message', 'Unknown error')}"
+                else:
+                    self.summary_text = f"Error: {response.status_code}"
+        except Exception as e:
+            self.summary_text = f"Error generating summary: {str(e)}"
+        finally:
+            self.summary_loading = False
 
 
 def note_card(note) -> rx.Component:
@@ -166,11 +216,59 @@ def index() -> rx.Component:
             rx.divider(margin_y="20px"),
             # All notes section
             rx.heading("All Notes", size="5", margin_bottom="10px"),
-            rx.button(
-                "🔄 Refresh Notes",
-                on_click=State.load_notes,
-                size="2",
+
+            # Summary section
+            rx.hstack(
+                rx.button(
+                    "✨ Generate Summary (Last 6 Notes)",
+                    on_click=lambda: State.generate_summary(6),
+                    color_scheme="purple",
+                    size="2",
+                    loading=State.summary_loading,
+                ),
+                rx.button(
+                    "🔄 Refresh Notes",
+                    on_click=State.load_notes,
+                    size="2",
+                ),
+                spacing="3",
                 margin_bottom="15px",
+            ),
+
+            # Display summary if available
+            rx.cond(
+                State.summary_text != "",
+                rx.box(
+                    rx.vstack(
+                        rx.hstack(
+                            rx.text("AI Summary", font_weight="bold", font_size="1.1em"),
+                            rx.text(
+                                f"(Last {State.summary_note_count} notes)",
+                                font_size="0.85em",
+                                color="#666",
+                            ),
+                            spacing="2",
+                        ),
+                        rx.text(
+                            State.summary_text,
+                            white_space="pre-wrap",
+                            line_height="1.6",
+                        ),
+                        rx.text(
+                            f"Generated: {State.summary_timestamp}",
+                            font_size="0.8em",
+                            color="#999",
+                            margin_top="10px",
+                        ),
+                        spacing="2",
+                        align_items="start",
+                    ),
+                    padding="20px",
+                    margin_bottom="20px",
+                    border="2px solid #9333ea",
+                    border_radius="8px",
+                    background_color="#faf5ff",
+                ),
             ),
             rx.cond(
                 State.delete_status != "",
@@ -197,7 +295,7 @@ def index() -> rx.Component:
             ),
             padding="40px",
             max_width="800px",
-            on_mount=State.load_notes,
+            on_mount=State.on_load,
         ),
     )
 
