@@ -27,6 +27,21 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Check if we need sudo for docker
+DOCKER_CMD="docker"
+if ! docker ps &> /dev/null; then
+    if sudo docker ps &> /dev/null 2>&1; then
+        echo -e "${YELLOW}Note: Using sudo for Docker commands${NC}"
+        echo "To avoid this, add your user to the docker group:"
+        echo "  sudo usermod -aG docker $USER"
+        echo ""
+        DOCKER_CMD="sudo docker"
+    else
+        echo -e "${YELLOW}Error: Cannot access Docker daemon. Please check Docker installation.${NC}"
+        exit 1
+    fi
+fi
+
 # Determine tag
 if [ -n "$1" ]; then
     TAG="$1"
@@ -65,29 +80,29 @@ fi
 # Build image
 echo ""
 echo -e "${BLUE}Building Docker image...${NC}"
-docker build -t "${FULL_IMAGE}" .
+$DOCKER_CMD build -t "${FULL_IMAGE}" .
 
 # Tag as latest
 echo ""
 echo -e "${BLUE}Tagging as latest...${NC}"
-docker tag "${FULL_IMAGE}" "${LATEST_IMAGE}"
+$DOCKER_CMD tag "${FULL_IMAGE}" "${LATEST_IMAGE}"
 
 # Check if logged in to Docker Hub
 echo ""
 echo -e "${BLUE}Checking Docker Hub authentication...${NC}"
-if ! docker info | grep -q "Username: ${DOCKER_USERNAME}"; then
+if ! $DOCKER_CMD info | grep -q "Username: ${DOCKER_USERNAME}"; then
     echo -e "${YELLOW}Not logged in to Docker Hub. Please log in:${NC}"
-    docker login
+    $DOCKER_CMD login
 fi
 
 # Push images
 echo ""
 echo -e "${BLUE}Pushing ${FULL_IMAGE}...${NC}"
-docker push "${FULL_IMAGE}"
+$DOCKER_CMD push "${FULL_IMAGE}"
 
 echo ""
 echo -e "${BLUE}Pushing ${LATEST_IMAGE}...${NC}"
-docker push "${LATEST_IMAGE}"
+$DOCKER_CMD push "${LATEST_IMAGE}"
 
 # Summary
 echo ""
