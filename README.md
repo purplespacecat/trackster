@@ -85,6 +85,31 @@ Interactive API documentation is available at:
 - **Language**: Python 3.12+
 - **Dependencies**: See `requirements.txt`
 
+## Docker Build & Push
+
+To build and push the Docker image to Docker Hub:
+
+```bash
+./build-and-push.sh           # Push as spacecrab/trackster:latest
+./build-and-push.sh v1.0.0    # Push with a specific version tag
+```
+
+The script automatically:
+- Builds the Docker image with both backend and frontend
+- Tags as `spacecrab/trackster:TAG` and `spacecrab/trackster:latest`
+- Prompts for Docker Hub login if needed
+- Pushes to Docker Hub
+
+## Homelab Deployment
+
+For deploying Trackster to a Kubernetes homelab environment:
+
+- See **[Homelab Deployment Guide](../homelab/k8s/applications/trackster/README.md)**
+- Quick start: Run `../homelab/k8s/applications/trackster/deploy.sh`
+- Docker image: `spacecrab/trackster:latest` (includes both backend and frontend)
+- Uses persistent storage for SQLite database
+- Supports LoadBalancer and Ingress access
+
 ## AI Summary Setup
 
 To enable the AI summary feature, you'll need a Google Gemini API key:

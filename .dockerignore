@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Database
+*.db
+notes.db
+
+# Environment variables
+.env
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Reflex web build
+.web/
+
+# Documentation
+*.md
+!README.md
+
+# Other
+LICENSE
+SETUP_AI_SUMMARY.md
